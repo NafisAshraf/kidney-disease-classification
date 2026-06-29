@@ -1,59 +1,86 @@
-# Kidney Disease Classification with VGG16
+# Kidney Disease Classification
 
-This project classifies kidney CT scan images into two categories: **Normal** and **Tumor**. It uses a VGG16 transfer-learning model, a staged training pipeline, YAML configuration, local logging, MLflow evaluation tracking, and a Flask web interface for image prediction.
+Kidney Disease Classification is a deep learning project for classifying kidney CT scan images as **Normal** or **Tumor**. The project uses a VGG16 transfer-learning model, a staged training pipeline, YAML-based configuration, MLflow experiment logging, and a Flask interface for image prediction.
 
-The project is designed as a clean machine learning application rather than a deployment exercise. It keeps the model, pipeline, frontend, and documentation together while leaving out Docker, cloud setup, and CI/CD.
+The focus is a reproducible machine learning workflow: dataset ingestion, exploratory data analysis, model training, evaluation, and local inference.
 
-![Frontend Home](assets/frontend_home.svg)
+## Highlights
 
-## Project Workflow
-
-![Pipeline Diagram](assets/pipeline_diagram.svg)
-
-The pipeline has four main stages:
-
-1. **Data ingestion** downloads the kidney CT dataset from Google Drive using `gdown` and extracts it into `artifacts/data_ingestion/`.
-2. **Base model preparation** loads VGG16 with ImageNet weights and saves the frozen base model.
-3. **Training** adds a flatten layer and a softmax classifier head, then trains the model using Keras image generators.
-4. **Evaluation** measures validation loss and accuracy, saves `scores.json`, and logs parameters, metrics, and the Keras model to MLflow.
+- VGG16 feature extractor with ImageNet weights
+- Keras `ImageDataGenerator` training pipeline
+- Reproducible configuration through `config/config.yaml` and `params.yaml`
+- MLflow logging for parameters, metrics, and model artifacts
+- DVC pipeline file for local orchestration
+- Flask frontend for CT image upload and prediction
+- Real EDA figures generated from the downloaded dataset
 
 ## Dataset
 
-The dataset is downloaded from the original Google Drive source:
+The dataset is downloaded from a public Google Drive archive:
 
 ```text
 https://drive.google.com/file/d/1vlhZ5c7abUKF8xXERIw6m9Te8fW7ohw3/view?usp=sharing
 ```
 
-After extraction, the expected dataset folder is:
+After extraction, images are stored at:
 
 ```text
 artifacts/data_ingestion/kidney-ct-scan-image
 ```
 
-The directory should contain class folders for CT images.
+The extracted dataset contains **465 CT images** across two folders:
 
-![Sample CT Grid](assets/sample_ct_grid.svg)
+| Class | Images |
+| --- | ---: |
+| Normal | 240 |
+| Tumor | 225 |
+| **Total** | **465** |
 
-![Class Distribution](assets/class_distribution.svg)
+## Exploratory Data Analysis
+
+EDA figures are generated from the actual extracted CT images using `scripts/eda.py`.
+
+### Class Balance
+
+The dataset is close to balanced, with only a small difference between the Normal and Tumor classes.
+
+![Class Distribution](assets/eda/class_distribution.png)
+
+### CT Image Samples
+
+The sample grid below shows real images from both classes. It is useful for visually checking image quality, framing, contrast, and class-level appearance before training.
+
+![Representative CT Images](assets/eda/sample_images_grid.png)
+
+### Image Dimensions
+
+The original images are not all the same size. Widths range from **512 to 787 pixels**, and heights range from **512 to 636 pixels**. The training pipeline standardizes them to `224x224`.
+
+![Image Dimensions](assets/eda/image_dimensions.png)
+
+### Brightness and Contrast
+
+The class-level brightness values are very close: Normal images average **49.37**, while Tumor images average **48.55** on the grayscale intensity scale. This suggests the classifier should not rely on a simple brightness shortcut.
+
+![Brightness and Contrast](assets/eda/brightness_contrast.png)
+
+### RGB Channel Statistics
+
+The channel means provide a quick check of dataset color intensity. These CT images are visually grayscale-like, so RGB channel behavior is expected to be similar across channels.
+
+![RGB Channel Means](assets/eda/channel_means.png)
 
 ## Model
 
-The model uses the same transfer-learning approach as the reference project:
+The classifier follows a transfer-learning approach:
 
-- VGG16 backbone
-- ImageNet weights
-- `include_top=False`
-- frozen convolutional layers
-- `Flatten`
-- `Dense(units=2, activation="softmax")`
-- SGD optimizer
-- categorical cross-entropy loss
-- accuracy metric
+1. Load VGG16 with `imagenet` weights and `include_top=False`.
+2. Freeze the convolutional base.
+3. Add a `Flatten` layer.
+4. Add a `Dense` output layer with 2 softmax units.
+5. Train using categorical cross-entropy and SGD.
 
-![Model Architecture](assets/model_architecture.svg)
-
-Default training parameters are stored in `params.yaml`:
+Default parameters:
 
 ```yaml
 AUGMENTATION: True
@@ -66,14 +93,16 @@ WEIGHTS: imagenet
 LEARNING_RATE: 0.01
 ```
 
-## Training
+## Training Pipeline
 
-The training step uses `ImageDataGenerator` with:
+The pipeline is organized into four stages:
 
-- pixel rescaling by `1./255`
-- validation split of `0.20`
-- bilinear resizing to `224x224`
-- rotation, horizontal flip, shifts, shear, and zoom when augmentation is enabled
+| Stage | Purpose |
+| --- | --- |
+| Data ingestion | Download and extract the CT image dataset |
+| Base model preparation | Create the VGG16 base and updated classifier model |
+| Training | Train the updated model on the CT image folders |
+| Evaluation | Save metrics and log the model with MLflow |
 
 Run the full pipeline:
 
@@ -81,53 +110,59 @@ Run the full pipeline:
 uv run python main.py
 ```
 
-Run the DVC pipeline locally:
+Run through DVC:
 
 ```bash
 uv run dvc repro
 ```
 
-![Training History](assets/training_history.svg)
+Generate EDA figures:
 
-## Evaluation and MLflow
+```bash
+uv run python scripts/eda.py
+```
 
-Evaluation uses a validation split of `0.30` and writes:
+## MLflow Evaluation
+
+Evaluation writes metrics to:
 
 ```text
 scores.json
 ```
 
-The MLflow stage logs:
+The evaluation stage logs:
 
-- training parameters
+- model parameters from `params.yaml`
 - validation loss
 - validation accuracy
 - Keras model artifact
 
-The MLflow tracking URI is configured for the same DagsHub endpoint used by the reference project. Remote logging requires valid MLflow/DagsHub credentials in the environment.
+The MLflow tracking URI is configured in `config/config.yaml`. Remote tracking requires valid DagsHub or MLflow credentials in the environment.
 
-![MLflow Scores](assets/mlflow_scores.svg)
+## Web Application
 
-## Web App
-
-The Flask app provides a custom frontend for prediction. It accepts a CT image, previews it, sends the image to `/predict`, and displays the predicted class and confidence.
-
-![Prediction UI](assets/frontend_prediction.svg)
+The Flask app provides a local prediction interface for CT images.
 
 Routes:
 
-| Route | Method | Purpose |
+| Route | Method | Description |
 | --- | --- | --- |
-| `/` | GET | Web interface |
-| `/predict` | POST | Predict uploaded CT image |
-| `/train` | GET, POST | Run the training pipeline |
+| `/` | GET | Upload interface |
+| `/predict` | POST | Image prediction endpoint |
+| `/train` | GET, POST | Runs the training pipeline |
 
-Prediction labels:
+Prediction mapping:
 
-| Model Output | Label |
-| --- | --- |
-| `0` | Normal |
-| `1` | Tumor |
+| Output Index | Label |
+| ---: | --- |
+| 0 | Normal |
+| 1 | Tumor |
+
+The predictor expects the trained model at:
+
+```text
+artifacts/training/model.h5
+```
 
 ## Project Structure
 
@@ -140,7 +175,10 @@ Prediction labels:
 ├── config/
 │   └── config.yaml
 ├── params.yaml
+├── scripts/
+│   └── eda.py
 ├── assets/
+│   └── eda/
 ├── artifacts/
 ├── data/
 │   ├── raw/
@@ -158,20 +196,36 @@ Prediction labels:
         ├── constants/
         ├── entity/
         ├── pipeline/
-        ├── utils/
-        ├── exception.py
-        └── __init__.py
+        └── utils/
 ```
 
 ## Setup
 
-Install `uv`, then install the project environment:
+Install dependencies with `uv`:
 
 ```bash
 uv sync
 ```
 
-Run the app:
+Download and extract the dataset:
+
+```bash
+uv run python -c "from kidney_classifier.pipeline.stage_01_data_ingestion import DataIngestionTrainingPipeline; DataIngestionTrainingPipeline().main()"
+```
+
+Generate the EDA images:
+
+```bash
+uv run python scripts/eda.py
+```
+
+Train and evaluate:
+
+```bash
+uv run python main.py
+```
+
+Start the Flask app:
 
 ```bash
 uv run python app.py
@@ -183,39 +237,6 @@ Open:
 http://localhost:8080
 ```
 
-## Common Commands
-
-Import check:
-
-```bash
-uv run python -c "import kidney_classifier"
-```
-
-Config check:
-
-```bash
-uv run python -c "from kidney_classifier.configuration.configuration import ConfigurationManager; ConfigurationManager().get_data_ingestion_config()"
-```
-
-Train:
-
-```bash
-uv run python main.py
-```
-
-Start Flask:
-
-```bash
-uv run python app.py
-```
-
 ## Notes
 
-The Flask predictor expects a trained model at:
-
-```text
-artifacts/training/model.h5
-```
-
-If the model file is missing, train the pipeline before using prediction. This project is for image classification experimentation and is not a clinical diagnostic system.
-
+This project is intended for machine learning experimentation and is not a clinical diagnostic tool.

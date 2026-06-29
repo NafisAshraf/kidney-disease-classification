@@ -1,0 +1,21 @@
+{
+  "total_images": 465,
+  "class_counts": {
+    "Normal": 240,
+    "Tumor": 225
+  },
+  "dimensions": {
+    "width_min": 512,
+    "width_max": 787,
+    "height_min": 512,
+    "height_max": 636
+  },
+  "mean_brightness_by_class": {
+    "Normal": 49.37,
+    "Tumor": 48.55
+  },
+  "mean_contrast_by_class": {
+    "Normal": 67.29,
+    "Tumor": 68.66
+  }
+}
