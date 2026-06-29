@@ -1,0 +1,47 @@
+stages:
+  data_ingestion:
+    cmd: uv run python -c "from kidney_classifier.pipeline.stage_01_data_ingestion import DataIngestionTrainingPipeline; DataIngestionTrainingPipeline().main()"
+    deps:
+      - src/kidney_classifier/pipeline/stage_01_data_ingestion.py
+      - src/kidney_classifier/components/data_ingestion.py
+      - config/config.yaml
+    outs:
+      - artifacts/data_ingestion/data.zip
+      - artifacts/data_ingestion/kidney-ct-scan-image
+
+  prepare_base_model:
+    cmd: uv run python -c "from kidney_classifier.pipeline.stage_02_prepare_base_model import PrepareBaseModelTrainingPipeline; PrepareBaseModelTrainingPipeline().main()"
+    deps:
+      - src/kidney_classifier/pipeline/stage_02_prepare_base_model.py
+      - src/kidney_classifier/components/prepare_base_model.py
+      - config/config.yaml
+      - params.yaml
+    outs:
+      - artifacts/prepare_base_model/base_model.h5
+      - artifacts/prepare_base_model/base_model_updated.h5
+
+  training:
+    cmd: uv run python -c "from kidney_classifier.pipeline.stage_03_model_training import ModelTrainingPipeline; ModelTrainingPipeline().main()"
+    deps:
+      - artifacts/data_ingestion/kidney-ct-scan-image
+      - artifacts/prepare_base_model/base_model_updated.h5
+      - src/kidney_classifier/pipeline/stage_03_model_training.py
+      - src/kidney_classifier/components/model_training.py
+      - config/config.yaml
+      - params.yaml
+    outs:
+      - artifacts/training/model.h5
+
+  evaluation:
+    cmd: uv run python -c "from kidney_classifier.pipeline.stage_04_model_evaluation import EvaluationPipeline; EvaluationPipeline().main()"
+    deps:
+      - artifacts/data_ingestion/kidney-ct-scan-image
+      - artifacts/training/model.h5
+      - src/kidney_classifier/pipeline/stage_04_model_evaluation.py
+      - src/kidney_classifier/components/model_evaluation_mlflow.py
+      - config/config.yaml
+      - params.yaml
+    metrics:
+      - scores.json:
+          cache: false
+

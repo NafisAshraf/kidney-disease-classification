@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kidney CT Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="shell">
+        <section class="workspace">
+            <div class="panel intro">
+                <p class="eyebrow">Kidney CT Analysis</p>
+                <h1>Kidney Disease Classification</h1>
+                <p class="lead">Upload a kidney CT scan image and classify it as Normal or Tumor using a VGG16 transfer learning model.</p>
+                <div class="stats">
+                    <div>
+                        <span>Model</span>
+                        <strong>VGG16</strong>
+                    </div>
+                    <div>
+                        <span>Image Size</span>
+                        <strong>224 x 224</strong>
+                    </div>
+                    <div>
+                        <span>Classes</span>
+                        <strong>2</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel predictor">
+                <form id="predictForm">
+                    <label class="dropzone" id="dropzone" for="imageInput">
+                        <input id="imageInput" type="file" accept="image/*">
+                        <span class="drop-icon">+</span>
+                        <span class="drop-title">Choose CT image</span>
+                        <span class="drop-subtitle">JPG, JPEG, or PNG</span>
+                    </label>
+
+                    <div class="preview-wrap" id="previewWrap">
+                        <img id="previewImage" alt="Selected CT scan preview">
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" id="predictButton">Predict</button>
+                        <button type="button" class="ghost" id="clearButton">Clear</button>
+                    </div>
+                </form>
+
+                <div class="result" id="resultBox">
+                    <span class="result-label">Prediction</span>
+                    <strong id="predictionText">Waiting for image</strong>
+                    <span id="confidenceText">Confidence will appear after prediction.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="details">
+            <div>
+                <span>Training Pipeline</span>
+                <p>Data ingestion, VGG16 base preparation, model training, and MLflow evaluation run through staged Python modules.</p>
+            </div>
+            <div>
+                <span>Local Tracking</span>
+                <p>Scores are saved to JSON, and MLflow can log metrics and the Keras model when credentials are configured.</p>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+

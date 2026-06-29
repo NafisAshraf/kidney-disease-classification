@@ -1,0 +1,17 @@
+.venv/
+.uv-cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+logs/*.log
+mlruns/
+artifacts/data_ingestion/
+artifacts/prepare_base_model/
+artifacts/training/
+prediction_test_file/*.jpg
+prediction_test_file/*.jpeg
+prediction_test_file/*.png
+scores.json
+*.h5

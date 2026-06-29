@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-label="Sample CT image grid placeholder">
+  <rect width="900" height="520" fill="#0f172a"/>
+  <g font-family="Arial, sans-serif">
+    <text x="45" y="52" font-size="30" font-weight="700" fill="#ffffff">CT Image Samples</text>
+    <text x="45" y="82" font-size="16" fill="#cbd5e1">Representative cells for README screenshots after dataset extraction.</text>
+    <g fill="#1e293b" stroke="#64748b" stroke-width="2">
+      <rect x="45" y="120" width="180" height="140" rx="8"/>
+      <rect x="255" y="120" width="180" height="140" rx="8"/>
+      <rect x="465" y="120" width="180" height="140" rx="8"/>
+      <rect x="675" y="120" width="180" height="140" rx="8"/>
+      <rect x="45" y="315" width="180" height="140" rx="8"/>
+      <rect x="255" y="315" width="180" height="140" rx="8"/>
+      <rect x="465" y="315" width="180" height="140" rx="8"/>
+      <rect x="675" y="315" width="180" height="140" rx="8"/>
+    </g>
+    <g fill="#94a3b8" font-size="18" text-anchor="middle">
+      <text x="135" y="195">Normal</text>
+      <text x="345" y="195">Normal</text>
+      <text x="555" y="195">Tumor</text>
+      <text x="765" y="195">Tumor</text>
+      <text x="135" y="390">Normal</text>
+      <text x="345" y="390">Normal</text>
+      <text x="555" y="390">Tumor</text>
+      <text x="765" y="390">Tumor</text>
+    </g>
+  </g>
+</svg>
+
