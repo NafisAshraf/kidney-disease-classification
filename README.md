@@ -143,6 +143,8 @@ The MLflow tracking URI is configured in `config/config.yaml`. Remote tracking r
 
 The Flask app provides a local prediction interface for CT images.
 
+![Flask Web Interface](assets/frontend/home.png)
+
 Routes:
 
 | Route | Method | Description |
